@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner";
 import { TRPCReactProvider } from "@/trpc/client";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -24,7 +25,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <TRPCReactProvider>
-        <body className={`${inter.className} antialiased`}>{children}</body>
+        <body className={`${inter.className} antialiased`}>
+          <Toaster position="top-center" expand={true} />
+          {children}
+        </body>
       </TRPCReactProvider>
     </html>
   );

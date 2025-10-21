@@ -10,6 +10,7 @@ import {
 
 import { signInSchema, signUpSchema } from "@/features/auth/schemas";
 import { auth } from "@/lib/auth";
+import { APIError } from "better-auth";
 
 export const authRoute = createTRPCRouter({
   signIn: publicProcedure.input(signInSchema).mutation(async ({ input }) => {
@@ -49,8 +50,15 @@ export const authRoute = createTRPCRouter({
           password: input.password,
         },
       });
-      return true;
     } catch (error) {
+      if (error instanceof APIError) {
+        if (error.body?.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: error.body.message,
+          });
+        }
+      }
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to sign up user",
