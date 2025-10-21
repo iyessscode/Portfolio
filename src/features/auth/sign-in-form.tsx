@@ -33,9 +33,11 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { signInSchema } from "@/features/auth/schemas";
+import { useRouter } from "next/navigation";
 
 export const SignInForm = () => {
   const trpc = useTRPC();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePassword = useCallback(() => {
@@ -54,6 +56,7 @@ export const SignInForm = () => {
     trpc.auth.signIn.mutationOptions({
       onSuccess({ name }) {
         toast.success(`Welcome, ${name}!`);
+        router.push("/admin");
       },
       onError(error) {
         toast.error(error.message);

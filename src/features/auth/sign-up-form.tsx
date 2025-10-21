@@ -59,9 +59,9 @@ export const SignUpForm = () => {
         const params = new URLSearchParams();
         params.append("email", email);
         params.append("type", "email-verification");
-        toast.success(
-          "Account created successfully. Please check your email to verify your account.",
-        );
+
+        toast.success("Please check your email to verify your account.");
+
         router.push(`/auth/verify-otp?${params.toString()}`);
       },
       onError(error) {

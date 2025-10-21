@@ -31,7 +31,12 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 
+import { LoadingSwap } from "@/components/loading-swap";
 import { verifyOtpSchema } from "@/features/auth/schemas";
+import { useTRPC } from "@/trpc/client";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type Props = {
   email: string;
@@ -39,15 +44,31 @@ type Props = {
 };
 
 export default function VerifyOTPForm({ email, type }: Props) {
+  const trpc = useTRPC();
+  const router = useRouter();
+
   const form = useForm({
     resolver: zodResolver(verifyOtpSchema),
     defaultValues: {
+      email,
       otpCode: "",
     },
   });
 
+  const verifyOTPMutation = useMutation(
+    trpc.auth.verifyOtp.mutationOptions({
+      onSuccess(name) {
+        toast.success(`Welcome, ${name}! Please sign in to continue`);
+        router.push("/auth/sign-in");
+      },
+      onError(error) {
+        toast.error(error.message);
+      },
+    }),
+  );
+
   const onSubmit = (values: z.infer<typeof verifyOtpSchema>) => {
-    console.log({ values });
+    verifyOTPMutation.mutate(values);
   };
 
   return (
@@ -99,8 +120,14 @@ export default function VerifyOTPForm({ email, type }: Props) {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full">
-                  Verify OTP
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={verifyOTPMutation.isPending}
+                >
+                  <LoadingSwap isLoading={verifyOTPMutation.isPending}>
+                    Verify OTP
+                  </LoadingSwap>
                 </Button>
               </form>
             </Form>

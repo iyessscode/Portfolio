@@ -21,6 +21,7 @@ export const signInSchema = z.object({
 });
 
 export const verifyOtpSchema = z.object({
+  email: z.email(),
   otpCode: z
     .string()
     .min(6, "OTP Code must be 6 digits")

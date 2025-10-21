@@ -11,7 +11,11 @@ import {
   publicProcedure,
 } from "@/trpc/init";
 
-import { signInSchema, signUpSchema } from "@/features/auth/schemas";
+import {
+  signInSchema,
+  signUpSchema,
+  verifyOtpSchema,
+} from "@/features/auth/schemas";
 
 export const authRoute = createTRPCRouter({
   signIn: publicProcedure.input(signInSchema).mutation(async ({ input }) => {
@@ -91,5 +95,53 @@ export const authRoute = createTRPCRouter({
         cause: error,
       });
     }
+  }),
+
+  verifyOtp: publicProcedure
+    .input(verifyOtpSchema)
+    .mutation(async ({ input }) => {
+      try {
+        const { user } = await auth.api.verifyEmailOTP({
+          headers: await getHeaders(),
+          body: {
+            email: input.email,
+            otp: input.otpCode,
+          },
+        });
+
+        return user.name as string;
+      } catch (error) {
+        console.log({ error });
+        if (error instanceof APIError) {
+          if (error.body?.code === "OTP_EXPIRED") {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Your verification code has expired.",
+            });
+          }
+
+          if (error.body?.code === "INVALID_OTP") {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "The verification code you entered is invalid.",
+            });
+          }
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to verify email",
+          cause: error,
+        });
+      }
+    }),
+
+  me: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx)
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "You need sign in to continue",
+      });
+
+    return ctx.session?.user;
   }),
 });
