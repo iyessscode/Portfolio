@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input";
 
 import { signInSchema } from "@/features/auth/schemas";
 
-export const AuthForm = () => {
+export const SignInForm = () => {
   const form = useForm({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -99,7 +99,7 @@ export const AuthForm = () => {
                           />
                           <Button
                             type="button"
-                            className="absolute top-1/2 right-1 -translate-y-1/2"
+                            className="absolute top-1/2 right-1 -translate-y-1/2 hover:bg-transparent"
                             onClick={togglePassword}
                             variant="ghost"
                           >
