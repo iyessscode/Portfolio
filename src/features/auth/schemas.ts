@@ -19,3 +19,10 @@ export const signInSchema = z.object({
     .min(6, "Minimum 6 characters")
     .max(70, "Maximum 70 characters"),
 });
+
+export const verifyOtpSchema = z.object({
+  otpCode: z
+    .string()
+    .min(6, "OTP Code must be 6 digits")
+    .max(6, "OTP Code must be 6 digits"),
+});

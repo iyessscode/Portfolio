@@ -6,7 +6,7 @@ type Props = {
 
 export default function AdminLayout({ children }: Props) {
   const isAdmin = false;
-  if (!isAdmin) redirect("/sign-in");
+  if (!isAdmin) redirect("/auth/sign-in");
 
   return <div>{children}</div>;
 }
