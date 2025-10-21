@@ -4,10 +4,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import z from "zod";
 
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 
+import { useTRPC } from "@/trpc/client";
+import { useMutation } from "@tanstack/react-query";
+
+import { LoadingSwap } from "@/components/loading-swap";
 import { LogoText } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +35,13 @@ import { Input } from "@/components/ui/input";
 import { signInSchema } from "@/features/auth/schemas";
 
 export const SignInForm = () => {
+  const trpc = useTRPC();
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePassword = useCallback(() => {
+    setShowPassword((prev) => !prev);
+  }, []);
+
   const form = useForm({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -38,14 +50,21 @@ export const SignInForm = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof signInSchema>) => {
-    console.log(values);
-  };
-  const [showPassword, setShowPassword] = useState(false);
+  const signInMutation = useMutation(
+    trpc.auth.signIn.mutationOptions({
+      onSuccess({ name }) {
+        toast.success(`Welcome, ${name}!`);
+      },
+      onError(error) {
+        toast.error(error.message);
+      },
+    }),
+  );
 
-  const togglePassword = useCallback(() => {
-    setShowPassword((prev) => !prev);
-  }, []);
+  const onSubmit = (values: z.infer<typeof signInSchema>) => {
+    signInMutation.mutate(values);
+  };
+
   return (
     <div className="grid h-screen place-items-center px-4">
       <div className="mx-auto w-full max-w-md space-y-6">
@@ -114,9 +133,11 @@ export const SignInForm = () => {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={form.formState.isSubmitting}
+                  disabled={signInMutation.isPending}
                 >
-                  Continue
+                  <LoadingSwap isLoading={signInMutation.isPending}>
+                    Continue
+                  </LoadingSwap>
                 </Button>
               </form>
             </Form>

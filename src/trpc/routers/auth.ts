@@ -32,6 +32,15 @@ export const authRoute = createTRPCRouter({
 
       return res.user;
     } catch (error) {
+      console.log({ error });
+      if (error instanceof APIError) {
+        if (error.body?.code === "INVALID_EMAIL_OR_PASSWORD") {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: error.body.message,
+          });
+        }
+      }
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to sign in user",
