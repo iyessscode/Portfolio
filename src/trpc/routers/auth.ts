@@ -1,6 +1,9 @@
+import { APIError } from "better-auth";
 import { headers as getHeaders } from "next/headers";
 
 import { TRPCError } from "@trpc/server";
+
+import { auth } from "@/lib/auth";
 
 import {
   createTRPCRouter,
@@ -9,8 +12,6 @@ import {
 } from "@/trpc/init";
 
 import { signInSchema, signUpSchema } from "@/features/auth/schemas";
-import { auth } from "@/lib/auth";
-import { APIError } from "better-auth";
 
 export const authRoute = createTRPCRouter({
   signIn: publicProcedure.input(signInSchema).mutation(async ({ input }) => {
@@ -51,7 +52,7 @@ export const authRoute = createTRPCRouter({
 
   signUp: publicProcedure.input(signUpSchema).mutation(async ({ input }) => {
     try {
-      await auth.api.signUpEmail({
+      const res = await auth.api.signUpEmail({
         headers: await getHeaders(),
         body: {
           name: input.name,
@@ -59,6 +60,8 @@ export const authRoute = createTRPCRouter({
           password: input.password,
         },
       });
+
+      return res.user;
     } catch (error) {
       if (error instanceof APIError) {
         if (error.body?.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {

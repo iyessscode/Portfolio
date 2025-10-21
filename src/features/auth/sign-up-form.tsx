@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -36,6 +37,7 @@ import { signUpSchema } from "@/features/auth/schemas";
 
 export const SignUpForm = () => {
   const trpc = useTRPC();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePassword = useCallback(() => {
@@ -53,10 +55,14 @@ export const SignUpForm = () => {
 
   const signInMutation = useMutation(
     trpc.auth.signUp.mutationOptions({
-      onSuccess() {
+      onSuccess({ email }) {
+        const params = new URLSearchParams();
+        params.append("email", email);
+        params.append("type", "email-verification");
         toast.success(
           "Account created successfully. Please check your email to verify your account.",
         );
+        router.push(`/auth/verify-otp?${params.toString()}`);
       },
       onError(error) {
         toast.error(error.message);

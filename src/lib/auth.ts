@@ -1,10 +1,13 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { admin } from "better-auth/plugins";
+import { admin, emailOTP } from "better-auth/plugins";
 
+import { env } from "@/data/env";
 import { db } from "@/drizzle/db";
 import * as schema from "@/drizzle/schema";
+import OTPEmail from "@/features/auth/email/otp-email";
+import { resend } from "./email";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -14,6 +17,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
   },
   session: {
     cookieCache: {
@@ -25,6 +29,23 @@ export const auth = betterAuth({
     nextCookies(),
     admin({
       defaultRole: "user",
+    }),
+    emailOTP({
+      allowedAttempts: 5,
+      expiresIn: 60 * 5,
+      sendVerificationOnSignUp: true,
+      async sendVerificationOTP({ email, type, otp }) {
+        await resend.emails.send({
+          from: env.RESEND_SENDER_EMAIL,
+          to: email,
+          subject: getSubjectText(type),
+          react: OTPEmail({
+            otpCode: otp,
+            purpose: type,
+            expiryMinutes: "5",
+          }),
+        });
+      },
     }),
   ],
 });
